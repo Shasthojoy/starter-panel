@@ -1,9 +1,15 @@
 import {MetricsPanelCtrl} from 'app/plugins/sdk';
 import _ from 'lodash';
+import { DateTime } from './lib/luxon';
 import './css/starter-panel.css!';
 
 const panelDefaults = {
   bgColor: null,
+  dateSettings: {
+    dateFormat: 'YYYY-MM-DD',
+    fontSize: '20px',
+    fontWeight: 'normal'
+  },
 };
 
 export class StarterCtrl extends MetricsPanelCtrl {
@@ -33,6 +39,8 @@ export class StarterCtrl extends MetricsPanelCtrl {
     // The data-snapshot-load event is triggered when the dashboard is loading as a snapshot
     // Read more about saving and loading snapshot data here:
     this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
+
+    this.date = DateTime.local().toFormat(this.panel.dateSettings.dateFormat);
   }
 
   onInitEditMode() {

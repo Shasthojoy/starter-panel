@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], function (_export, _context) {
+System.register(['app/plugins/sdk', 'lodash', './lib/luxon', './css/starter-panel.css!'], function (_export, _context) {
   "use strict";
 
-  var MetricsPanelCtrl, _, _createClass, panelDefaults, StarterCtrl;
+  var MetricsPanelCtrl, _, DateTime, _createClass, panelDefaults, StarterCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -40,6 +40,8 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], funct
       MetricsPanelCtrl = _appPluginsSdk.MetricsPanelCtrl;
     }, function (_lodash) {
       _ = _lodash.default;
+    }, function (_libLuxon) {
+      DateTime = _libLuxon.DateTime;
     }, function (_cssStarterPanelCss) {}],
     execute: function () {
       _createClass = function () {
@@ -61,7 +63,12 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], funct
       }();
 
       panelDefaults = {
-        bgColor: null
+        bgColor: null,
+        dateSettings: {
+          dateFormat: 'YYYY-MM-DD',
+          fontSize: '20px',
+          fontWeight: 'normal'
+        }
       };
 
       _export('StarterCtrl', StarterCtrl = function (_MetricsPanelCtrl) {
@@ -95,6 +102,8 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], funct
           // The data-snapshot-load event is triggered when the dashboard is loading as a snapshot
           // Read more about saving and loading snapshot data here:
           _this.events.on('data-snapshot-load', _this.onDataSnapshotLoad.bind(_this));
+
+          _this.date = DateTime.local().toFormat(_this.panel.dateSettings.dateFormat);
           return _this;
         }
 
