@@ -1,6 +1,7 @@
 import {MetricsPanelCtrl} from 'app/plugins/sdk';
 import _ from 'lodash';
 import './css/starter-panel.css!';
+import TimeSeries from 'app/core/time_series2';
 
 const panelDefaults = {
   bgColor: null,
@@ -44,10 +45,23 @@ export class StarterCtrl extends MetricsPanelCtrl {
 
   onDataReceived(dataList) {
     if (!dataList) return;
+
+    const series = dataList.map(this.seriesHandler.bind(this));
+    this.currentValue = series[0].stats['current'];
+  }
+
+  seriesHandler(seriesData) {
+    var series = new TimeSeries({
+      datapoints: seriesData.datapoints || [],
+      alias: seriesData.target,
+    });
+
+    series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
+    return series;
   }
 
   onDataError() {
-    this.onDataReceived([]);
+    this.onDataReceived();
   }
 
   onDataSnapshotLoad(snapshotData) {

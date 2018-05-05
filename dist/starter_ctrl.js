@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], function (_export, _context) {
+System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/core/time_series2'], function (_export, _context) {
   "use strict";
 
-  var MetricsPanelCtrl, _, _createClass, panelDefaults, StarterCtrl;
+  var MetricsPanelCtrl, _, TimeSeries, _createClass, panelDefaults, StarterCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -40,7 +40,9 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], funct
       MetricsPanelCtrl = _appPluginsSdk.MetricsPanelCtrl;
     }, function (_lodash) {
       _ = _lodash.default;
-    }, function (_cssStarterPanelCss) {}],
+    }, function (_cssStarterPanelCss) {}, function (_appCoreTime_series) {
+      TimeSeries = _appCoreTime_series.default;
+    }],
     execute: function () {
       _createClass = function () {
         function defineProperties(target, props) {
@@ -110,11 +112,25 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!'], funct
           key: 'onDataReceived',
           value: function onDataReceived(dataList) {
             if (!dataList) return;
+
+            var series = dataList.map(this.seriesHandler.bind(this));
+            this.currentValue = series[0].stats['current'];
+          }
+        }, {
+          key: 'seriesHandler',
+          value: function seriesHandler(seriesData) {
+            var series = new TimeSeries({
+              datapoints: seriesData.datapoints || [],
+              alias: seriesData.target
+            });
+
+            series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
+            return series;
           }
         }, {
           key: 'onDataError',
           value: function onDataError() {
-            this.onDataReceived([]);
+            this.onDataReceived();
           }
         }, {
           key: 'onDataSnapshotLoad',
