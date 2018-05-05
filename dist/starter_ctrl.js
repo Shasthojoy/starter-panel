@@ -113,8 +113,7 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
           value: function onDataReceived(dataList) {
             if (!dataList) return;
 
-            var series = dataList.map(this.seriesHandler.bind(this));
-            this.currentValue = series[0].stats['current'];
+            this.currentValues = dataList.map(this.seriesHandler.bind(this));
           }
         }, {
           key: 'seriesHandler',

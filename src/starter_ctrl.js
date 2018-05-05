@@ -46,8 +46,7 @@ export class StarterCtrl extends MetricsPanelCtrl {
   onDataReceived(dataList) {
     if (!dataList) return;
 
-    const series = dataList.map(this.seriesHandler.bind(this));
-    this.currentValue = series[0].stats['current'];
+    this.currentValues = dataList.map(this.seriesHandler.bind(this));
   }
 
   seriesHandler(seriesData) {

@@ -1,5 +1,5 @@
 <div class="starter-panel" ng-style="{height: ctrl.height}">
-  <span>
-    Current: {{ctrl.currentValue}}
+  <span ng-repeat="currentValue in ctrl.currentValues">
+      {{currentValue.alias}}: {{currentValue.stats['current']}}
   </span>
 </div>
