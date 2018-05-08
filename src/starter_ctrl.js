@@ -8,6 +8,10 @@ import kbn from 'app/core/utils/kbn';
 const panelDefaults = {
   bgColor: null,
   format: 'none',
+  thresholds: '',
+  colors: ['#299c46', 'rgba(237, 129, 40, 0.89)', '#d44a3a'],
+  colorBackground: true,
+  colorValue: false,
   sparkline: {
     show: true,
     full: false,
@@ -81,6 +85,38 @@ export class StarterCtrl extends MetricsPanelCtrl {
     return series;
   }
 
+  setThresholds(thresholds) {
+    for (let i = 0; i < this.data.length; i++) {
+      this.data[i].thresholdColor = this.getColorForValue(this.data[i].value, thresholds);
+    }
+  }
+
+  getColorForValue(value, thresholds) {
+    if (!_.isFinite(value)) {
+      return null;
+    }
+    for (let i = thresholds.length; i > 0; i--) {
+      if (value >= thresholds[i - 1]) {
+        return this.panel.colors[i];
+      }
+    }
+    return _.first(this.panel.colors);
+  }
+
+  invertColorOrder() {
+    const tmp = this.panel.colors[0];
+    this.panel.colors[0] = this.panel.colors[2];
+    this.panel.colors[2] = tmp;
+    this.render();
+  }
+
+  onColorChange(panelColorIndex) {
+    return color => {
+      this.panel.colors[panelColorIndex] = color;
+      this.render();
+    };
+  }
+
   onDataError() {
     this.onDataReceived();
   }
@@ -117,9 +153,15 @@ export class StarterCtrl extends MetricsPanelCtrl {
         return;
       }
 
+      const thresholds = this.panel.thresholds.split(',').map(strVal => {
+        return Number(strVal.trim());
+      });
+      this.setThresholds(thresholds);
+
       const rootElem = elem.find('.temp-sparkline');
 
       addSparklines(rootElem);
+      ctrl.renderingCompleted();
     });
 
     function addSparklines(rootElem) {

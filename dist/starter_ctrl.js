@@ -69,6 +69,10 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
       panelDefaults = {
         bgColor: null,
         format: 'none',
+        thresholds: '',
+        colors: ['#299c46', 'rgba(237, 129, 40, 0.89)', '#d44a3a'],
+        colorBackground: true,
+        colorValue: false,
         sparkline: {
           show: true,
           full: false,
@@ -152,6 +156,44 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
             return series;
           }
         }, {
+          key: 'setThresholds',
+          value: function setThresholds(thresholds) {
+            for (var i = 0; i < this.data.length; i++) {
+              this.data[i].thresholdColor = this.getColorForValue(this.data[i].value, thresholds);
+            }
+          }
+        }, {
+          key: 'getColorForValue',
+          value: function getColorForValue(value, thresholds) {
+            if (!_.isFinite(value)) {
+              return null;
+            }
+            for (var i = thresholds.length; i > 0; i--) {
+              if (value >= thresholds[i - 1]) {
+                return this.panel.colors[i];
+              }
+            }
+            return _.first(this.panel.colors);
+          }
+        }, {
+          key: 'invertColorOrder',
+          value: function invertColorOrder() {
+            var tmp = this.panel.colors[0];
+            this.panel.colors[0] = this.panel.colors[2];
+            this.panel.colors[2] = tmp;
+            this.render();
+          }
+        }, {
+          key: 'onColorChange',
+          value: function onColorChange(panelColorIndex) {
+            var _this2 = this;
+
+            return function (color) {
+              _this2.panel.colors[panelColorIndex] = color;
+              _this2.render();
+            };
+          }
+        }, {
           key: 'onDataError',
           value: function onDataError() {
             this.onDataReceived();
@@ -176,13 +218,13 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
         }, {
           key: 'link',
           value: function link(scope, elem, attrs, ctrl) {
-            var _this2 = this;
+            var _this3 = this;
 
             this.events.on('render', function () {
               var $panelContainer = elem.find('.panel-container');
 
-              if (_this2.panel.bgColor) {
-                $panelContainer.css('background-color', _this2.panel.bgColor);
+              if (_this3.panel.bgColor) {
+                $panelContainer.css('background-color', _this3.panel.bgColor);
               } else {
                 $panelContainer.css('background-color', '');
               }
@@ -191,9 +233,15 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
                 return;
               }
 
+              var thresholds = _this3.panel.thresholds.split(',').map(function (strVal) {
+                return Number(strVal.trim());
+              });
+              _this3.setThresholds(thresholds);
+
               var rootElem = elem.find('.temp-sparkline');
 
               addSparklines(rootElem);
+              ctrl.renderingCompleted();
             });
 
             function addSparklines(rootElem) {
