@@ -1,6 +1,26 @@
 .starter-panel {
   display: flex;
-  align-items: center;
-  justify-content: center;
   flex-direction: column;
+}
+
+.starter-panel-multistat {
+  display: flex;
+  flex-direction: row;
+}
+
+.starter-panel-multistat-value{
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.starter-panel-multistat-value__text {
+  font-size: 18px;
+}
+
+.starter-panel-multistat-value__value {
+  font-size: 32px;
+}
+.starter-panel-multistat-sparkline {
+  width: 50%;
 }

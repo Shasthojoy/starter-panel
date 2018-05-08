@@ -71,11 +71,10 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
         format: 'none',
         thresholds: '',
         colors: ['#299c46', 'rgba(237, 129, 40, 0.89)', '#d44a3a'],
-        colorBackground: true,
+        colorBackground: false,
         colorValue: false,
         sparkline: {
           show: true,
-          full: false,
           lineColor: 'rgb(31, 120, 193)',
           fillColor: 'rgba(31, 118, 189, 0.18)'
         }
@@ -220,6 +219,8 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
           value: function link(scope, elem, attrs, ctrl) {
             var _this3 = this;
 
+            var data = void 0;
+
             this.events.on('render', function () {
               var $panelContainer = elem.find('.panel-container');
 
@@ -232,48 +233,64 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
               if (!ctrl.data) {
                 return;
               }
+              data = _this3.data;
 
               var thresholds = _this3.panel.thresholds.split(',').map(function (strVal) {
                 return Number(strVal.trim());
               });
               _this3.setThresholds(thresholds);
 
-              var rootElem = elem.find('.temp-sparkline');
+              generateHtml();
 
-              addSparklines(rootElem);
-              ctrl.renderingCompleted();
+              addSparklines();
             });
 
-            function addSparklines(rootElem) {
-              var width = elem.width() + 20;
-              if (width < 30) {
-                // element has not gotten it's width yet
+            function generateHtml() {
+              var body = '';
+
+              for (var i = 0; i < data.length; i++) {
+                var bgThresholdColor = ctrl.panel.colorBackground ? 'background-color: ' + data[i].thresholdColor : '';
+                body += '<span class="starter-panel-multistat" style="' + bgThresholdColor + '">';
+                body += '<span class="starter-panel-multistat-value">';
+                body += '<span class="starter-panel-multistat-value__text">' + data[i].alias + '</span>';
+                var valueThresholdColor = ctrl.panel.colorValue ? 'color: ' + data[i].thresholdColor : '';
+                body += '<span class="starter-panel-multistat-value__value" style="' + valueThresholdColor + '">' + data[i].valueFormatted + '</span>';
+                body += '</span>';
+                body += '<span class="starter-panel-multistat-sparkline"></span>';
+                body += '</span>';
+              }
+              var starterElem = elem.find('.starter-panel');
+              starterElem.html(body);
+            }
+
+            function addSparklines() {
+              var rootElems = elem.find('.starter-panel-multistat');
+
+              if (rootElems.length === 0) {
                 // delay sparkline render
                 setTimeout(function () {
-                  return addSparklines(rootElem);
+                  return addSparklines();
                 }, 30);
+              }
+
+              for (var i = 0; i < data.length; i++) {
+                addSparkline(data[i], $(rootElems[i]));
+              }
+            }
+
+            function addSparkline(data, rootElem) {
+              var width = elem.width() + 20;
+              if (width < 30 || rootElem.length === 0) {
+                // element has not gotten it's width yet
                 return;
               }
+              var sparkLineElem = rootElem.find('.starter-panel-multistat-sparkline');
+              sparkLineElem.empty();
 
-              rootElem.empty();
-
-              var height = ctrl.height;
               var plotCanvas = $('<div></div>');
               var plotCss = {};
-              plotCss.position = 'absolute';
-
-              if (ctrl.panel.sparkline.full) {
-                plotCss.bottom = '5px';
-                plotCss.left = '-5px';
-                plotCss.width = width - 10 + 'px';
-                var dynamicHeightMargin = height <= 100 ? 5 : Math.round(height / 100) * 15 + 5;
-                plotCss.height = height - dynamicHeightMargin + 'px';
-              } else {
-                plotCss.bottom = '0px';
-                plotCss.left = '-5px';
-                plotCss.width = width - 10 + 'px';
-                plotCss.height = Math.floor(height * 0.25) + 'px';
-              }
+              plotCss.width = rootElem.width() / 2 + 'px';
+              plotCss.height = rootElem.height() - 20 + 'px';
 
               plotCanvas.css(plotCss);
 
@@ -294,13 +311,13 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
                   min: ctrl.range.from.valueOf(),
                   max: ctrl.range.to.valueOf()
                 },
-                grid: { hoverable: false, show: false }
+                grid: { hoverable: false, show: false, borderWidth: 0 }
               };
 
-              rootElem.append(plotCanvas);
+              sparkLineElem.append(plotCanvas);
 
               var plotSeries = {
-                data: ctrl.data[0].flotpairs,
+                data: data.flotpairs,
                 color: ctrl.panel.sparkline.lineColor
               };
 

@@ -1,8 +1,10 @@
 <div class="starter-panel" ng-style="{height: ctrl.height}">
-  <span ng-style="ctrl.panel.colorBackground && {'background-color': '{{currentValue.thresholdColor}}'}" ng-repeat="currentValue in ctrl.data">
-      <span ng-style="ctrl.panel.colorValue && {'color': '{{currentValue.thresholdColor}}'}">{{currentValue.alias}}: {{currentValue.valueFormatted}}</span>
-  </span>
-  <div class="temp-sparkline">
-
-  </div>
+  <!-- <span class="starter-panel-multistat" ng-style="" ng-repeat="currentValue in ctrl.data track by currentValue.alias">
+      <span class="starter-panel-multistat-value">
+        <span class="starter-panel-multistat-value__text">{{currentValue.alias}}</span>
+        <span class="starter-panel-multistat-value__value" ng-style="ctrl.panel.colorValue && {'color': '{{currentValue.thresholdColor}}'}">{{currentValue.valueFormatted}}</span>
+      </span>
+      <span class="starter-panel-multistat-sparkline">
+      </span>
+  </span> -->
 </div>
