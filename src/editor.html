@@ -6,7 +6,11 @@
 			<span class="max-width-10">
 				<spectrum-picker class="gf-form-input" ng-model="ctrl.panel.bgColor" ng-change="ctrl.render()" ></spectrum-picker>
 			</span>
-		</div>
+    </div>
+    <div class="gf-form">
+      <label class="gf-form-label width-6">Unit</label>
+      <div class="gf-form-dropdown-typeahead width-18" ng-model="ctrl.panel.format" dropdown-typeahead2="ctrl.unitFormats" dropdown-typeahead-on-select="ctrl.setUnitFormat($subItem)"></div>
+    </div>
   </div>
 
   <div class="section gf-form-group">

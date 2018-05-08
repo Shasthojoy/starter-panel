@@ -3,9 +3,11 @@ import _ from 'lodash';
 import $ from 'jquery';
 import './css/starter-panel.css!';
 import TimeSeries from 'app/core/time_series2';
+import kbn from 'app/core/utils/kbn';
 
 const panelDefaults = {
   bgColor: null,
+  format: 'none',
   sparkline: {
     show: true,
     full: false,
@@ -48,6 +50,12 @@ export class StarterCtrl extends MetricsPanelCtrl {
 
   onInitEditMode() {
     this.addEditorTab('Options', 'public/plugins/grafana-starter-panel/editor.html', 2);
+    this.unitFormats = kbn.getUnitFormats();
+  }
+
+  setUnitFormat(subItem) {
+    this.panel.format = subItem.value;
+    this.refresh();
   }
 
   onPanelTeardown() {
@@ -61,12 +69,15 @@ export class StarterCtrl extends MetricsPanelCtrl {
   }
 
   seriesHandler(seriesData) {
-    var series = new TimeSeries({
+    const series = new TimeSeries({
       datapoints: seriesData.datapoints || [],
       alias: seriesData.target,
     });
 
     series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
+    series.value = series.stats['current'];
+    const formatFunc = kbn.valueFormats[this.panel.format];
+    series.valueFormatted = formatFunc(series.value, 0, 1);
     return series;
   }
 

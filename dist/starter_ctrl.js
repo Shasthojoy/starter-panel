@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css!', 'app/core/time_series2'], function (_export, _context) {
+System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css!', 'app/core/time_series2', 'app/core/utils/kbn'], function (_export, _context) {
   "use strict";
 
-  var MetricsPanelCtrl, _, $, TimeSeries, _createClass, panelDefaults, StarterCtrl;
+  var MetricsPanelCtrl, _, $, TimeSeries, kbn, _createClass, panelDefaults, StarterCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -44,6 +44,8 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
       $ = _jquery.default;
     }, function (_cssStarterPanelCss) {}, function (_appCoreTime_series) {
       TimeSeries = _appCoreTime_series.default;
+    }, function (_appCoreUtilsKbn) {
+      kbn = _appCoreUtilsKbn.default;
     }],
     execute: function () {
       _createClass = function () {
@@ -66,6 +68,7 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
 
       panelDefaults = {
         bgColor: null,
+        format: 'none',
         sparkline: {
           show: true,
           full: false,
@@ -115,6 +118,13 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
           key: 'onInitEditMode',
           value: function onInitEditMode() {
             this.addEditorTab('Options', 'public/plugins/grafana-starter-panel/editor.html', 2);
+            this.unitFormats = kbn.getUnitFormats();
+          }
+        }, {
+          key: 'setUnitFormat',
+          value: function setUnitFormat(subItem) {
+            this.panel.format = subItem.value;
+            this.refresh();
           }
         }, {
           key: 'onPanelTeardown',
@@ -136,6 +146,9 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
             });
 
             series.flotpairs = series.getFlotPairs(this.panel.nullPointMode);
+            series.value = series.stats['current'];
+            var formatFunc = kbn.valueFormats[this.panel.format];
+            series.valueFormatted = formatFunc(series.value, 0, 1);
             return series;
           }
         }, {
