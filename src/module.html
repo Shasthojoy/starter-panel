@@ -1,5 +1,8 @@
 <div class="starter-panel" ng-style="{height: ctrl.height}">
-  <span ng-repeat="currentValue in ctrl.currentValues">
+  <span ng-repeat="currentValue in ctrl.data">
       {{currentValue.alias}}: {{currentValue.stats['current']}}
   </span>
+  <div class="temp-sparkline">
+
+  </div>
 </div>

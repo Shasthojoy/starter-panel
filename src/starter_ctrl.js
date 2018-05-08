@@ -1,10 +1,17 @@
 import {MetricsPanelCtrl} from 'app/plugins/sdk';
 import _ from 'lodash';
+import $ from 'jquery';
 import './css/starter-panel.css!';
 import TimeSeries from 'app/core/time_series2';
 
 const panelDefaults = {
   bgColor: null,
+  sparkline: {
+    show: true,
+    full: false,
+    lineColor: 'rgb(31, 120, 193)',
+    fillColor: 'rgba(31, 118, 189, 0.18)',
+  },
 };
 
 export class StarterCtrl extends MetricsPanelCtrl {
@@ -34,6 +41,9 @@ export class StarterCtrl extends MetricsPanelCtrl {
     // The data-snapshot-load event is triggered when the dashboard is loading as a snapshot
     // Read more about saving and loading snapshot data here:
     this.events.on('data-snapshot-load', this.onDataSnapshotLoad.bind(this));
+
+    this.onSparklineColorChange = this.onSparklineColorChange.bind(this);
+    this.onSparklineFillChange = this.onSparklineFillChange.bind(this);
   }
 
   onInitEditMode() {
@@ -46,7 +56,8 @@ export class StarterCtrl extends MetricsPanelCtrl {
   onDataReceived(dataList) {
     if (!dataList) return;
 
-    this.currentValues = dataList.map(this.seriesHandler.bind(this));
+    this.data = dataList.map(this.seriesHandler.bind(this));
+    this.render();
   }
 
   seriesHandler(seriesData) {
@@ -67,11 +78,21 @@ export class StarterCtrl extends MetricsPanelCtrl {
     this.onDataReceived(snapshotData);
   }
 
+  onSparklineColorChange(newColor) {
+    this.panel.sparkline.lineColor = newColor;
+    this.render();
+  }
+
+  onSparklineFillChange(newColor) {
+    this.panel.sparkline.fillColor = newColor;
+    this.render();
+  }
+
   /*
   The link function is an Angular function that can be used to access the HTML element for the panel
   */
   /* eslint class-methods-use-this: 0 */
-  link(scope, elem) {
+  link(scope, elem, attrs, ctrl) {
     this.events.on('render', () => {
       const $panelContainer = elem.find('.panel-container');
 
@@ -80,7 +101,76 @@ export class StarterCtrl extends MetricsPanelCtrl {
       } else {
         $panelContainer.css('background-color', '');
       }
+
+      if (!ctrl.data) {
+        return;
+      }
+
+      const rootElem = elem.find('.temp-sparkline');
+
+      addSparklines(rootElem);
     });
+
+    function addSparklines(rootElem) {
+      const width = elem.width() + 20;
+      if (width < 30) {
+        // element has not gotten it's width yet
+        // delay sparkline render
+        setTimeout(() => addSparklines(rootElem), 30);
+        return;
+      }
+
+      rootElem.empty();
+
+      const height = ctrl.height;
+      const plotCanvas = $('<div></div>');
+      const plotCss = {};
+      plotCss.position = 'absolute';
+
+      if (ctrl.panel.sparkline.full) {
+        plotCss.bottom = '5px';
+        plotCss.left = '-5px';
+        plotCss.width = width - 10 + 'px';
+        const dynamicHeightMargin = height <= 100 ? 5 : Math.round(height / 100) * 15 + 5;
+        plotCss.height = height - dynamicHeightMargin + 'px';
+      } else {
+        plotCss.bottom = '0px';
+        plotCss.left = '-5px';
+        plotCss.width = width - 10 + 'px';
+        plotCss.height = Math.floor(height * 0.25) + 'px';
+      }
+
+      plotCanvas.css(plotCss);
+
+      const options = {
+        legend: { show: false },
+        series: {
+          lines: {
+            show: true,
+            fill: 1,
+            lineWidth: 1,
+            fillColor: ctrl.panel.sparkline.fillColor,
+          },
+        },
+        yaxes: { show: false },
+        xaxis: {
+          show: false,
+          mode: 'time',
+          min: ctrl.range.from.valueOf(),
+          max: ctrl.range.to.valueOf(),
+        },
+        grid: { hoverable: false, show: false },
+      };
+
+      rootElem.append(plotCanvas);
+
+      const plotSeries = {
+        data: ctrl.data[0].flotpairs,
+        color: ctrl.panel.sparkline.lineColor,
+      };
+
+      $.plot(plotCanvas, [plotSeries], options);
+    }
   }
 }
 

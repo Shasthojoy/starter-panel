@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/core/time_series2'], function (_export, _context) {
+System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css!', 'app/core/time_series2'], function (_export, _context) {
   "use strict";
 
-  var MetricsPanelCtrl, _, TimeSeries, _createClass, panelDefaults, StarterCtrl;
+  var MetricsPanelCtrl, _, $, TimeSeries, _createClass, panelDefaults, StarterCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -40,6 +40,8 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
       MetricsPanelCtrl = _appPluginsSdk.MetricsPanelCtrl;
     }, function (_lodash) {
       _ = _lodash.default;
+    }, function (_jquery) {
+      $ = _jquery.default;
     }, function (_cssStarterPanelCss) {}, function (_appCoreTime_series) {
       TimeSeries = _appCoreTime_series.default;
     }],
@@ -63,7 +65,13 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
       }();
 
       panelDefaults = {
-        bgColor: null
+        bgColor: null,
+        sparkline: {
+          show: true,
+          full: false,
+          lineColor: 'rgb(31, 120, 193)',
+          fillColor: 'rgba(31, 118, 189, 0.18)'
+        }
       };
 
       _export('StarterCtrl', StarterCtrl = function (_MetricsPanelCtrl) {
@@ -97,6 +105,9 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
           // The data-snapshot-load event is triggered when the dashboard is loading as a snapshot
           // Read more about saving and loading snapshot data here:
           _this.events.on('data-snapshot-load', _this.onDataSnapshotLoad.bind(_this));
+
+          _this.onSparklineColorChange = _this.onSparklineColorChange.bind(_this);
+          _this.onSparklineFillChange = _this.onSparklineFillChange.bind(_this);
           return _this;
         }
 
@@ -113,7 +124,8 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
           value: function onDataReceived(dataList) {
             if (!dataList) return;
 
-            this.currentValues = dataList.map(this.seriesHandler.bind(this));
+            this.data = dataList.map(this.seriesHandler.bind(this));
+            this.render();
           }
         }, {
           key: 'seriesHandler',
@@ -137,8 +149,20 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
             this.onDataReceived(snapshotData);
           }
         }, {
+          key: 'onSparklineColorChange',
+          value: function onSparklineColorChange(newColor) {
+            this.panel.sparkline.lineColor = newColor;
+            this.render();
+          }
+        }, {
+          key: 'onSparklineFillChange',
+          value: function onSparklineFillChange(newColor) {
+            this.panel.sparkline.fillColor = newColor;
+            this.render();
+          }
+        }, {
           key: 'link',
-          value: function link(scope, elem) {
+          value: function link(scope, elem, attrs, ctrl) {
             var _this2 = this;
 
             this.events.on('render', function () {
@@ -149,7 +173,78 @@ System.register(['app/plugins/sdk', 'lodash', './css/starter-panel.css!', 'app/c
               } else {
                 $panelContainer.css('background-color', '');
               }
+
+              if (!ctrl.data) {
+                return;
+              }
+
+              var rootElem = elem.find('.temp-sparkline');
+
+              addSparklines(rootElem);
             });
+
+            function addSparklines(rootElem) {
+              var width = elem.width() + 20;
+              if (width < 30) {
+                // element has not gotten it's width yet
+                // delay sparkline render
+                setTimeout(function () {
+                  return addSparklines(rootElem);
+                }, 30);
+                return;
+              }
+
+              rootElem.empty();
+
+              var height = ctrl.height;
+              var plotCanvas = $('<div></div>');
+              var plotCss = {};
+              plotCss.position = 'absolute';
+
+              if (ctrl.panel.sparkline.full) {
+                plotCss.bottom = '5px';
+                plotCss.left = '-5px';
+                plotCss.width = width - 10 + 'px';
+                var dynamicHeightMargin = height <= 100 ? 5 : Math.round(height / 100) * 15 + 5;
+                plotCss.height = height - dynamicHeightMargin + 'px';
+              } else {
+                plotCss.bottom = '0px';
+                plotCss.left = '-5px';
+                plotCss.width = width - 10 + 'px';
+                plotCss.height = Math.floor(height * 0.25) + 'px';
+              }
+
+              plotCanvas.css(plotCss);
+
+              var options = {
+                legend: { show: false },
+                series: {
+                  lines: {
+                    show: true,
+                    fill: 1,
+                    lineWidth: 1,
+                    fillColor: ctrl.panel.sparkline.fillColor
+                  }
+                },
+                yaxes: { show: false },
+                xaxis: {
+                  show: false,
+                  mode: 'time',
+                  min: ctrl.range.from.valueOf(),
+                  max: ctrl.range.to.valueOf()
+                },
+                grid: { hoverable: false, show: false }
+              };
+
+              rootElem.append(plotCanvas);
+
+              var plotSeries = {
+                data: ctrl.data[0].flotpairs,
+                color: ctrl.panel.sparkline.lineColor
+              };
+
+              $.plot(plotCanvas, [plotSeries], options);
+            }
           }
         }]);
 
