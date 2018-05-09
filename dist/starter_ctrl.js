@@ -220,6 +220,7 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
             var _this3 = this;
 
             var data = void 0;
+            var templateSrv = this.templateSrv;
 
             this.events.on('render', function () {
               var $panelContainer = elem.find('.panel-container');
@@ -235,7 +236,7 @@ System.register(['app/plugins/sdk', 'lodash', 'jquery', './css/starter-panel.css
               }
               data = _this3.data;
 
-              var thresholds = _this3.panel.thresholds.split(',').map(function (strVal) {
+              var thresholds = templateSrv.replace(_this3.panel.thresholds || '').split(',').map(function (strVal) {
                 return Number(strVal.trim());
               });
               _this3.setThresholds(thresholds);

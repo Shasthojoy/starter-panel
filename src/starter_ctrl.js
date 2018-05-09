@@ -140,6 +140,7 @@ export class StarterCtrl extends MetricsPanelCtrl {
   /* eslint class-methods-use-this: 0 */
   link(scope, elem, attrs, ctrl) {
     let data;
+    const templateSrv = this.templateSrv;
 
     this.events.on('render', () => {
       const $panelContainer = elem.find('.panel-container');
@@ -155,7 +156,7 @@ export class StarterCtrl extends MetricsPanelCtrl {
       }
       data = this.data;
 
-      const thresholds = this.panel.thresholds.split(',').map(strVal => {
+      const thresholds = templateSrv.replace(this.panel.thresholds || '').split(',').map(strVal => {
         return Number(strVal.trim());
       });
       this.setThresholds(thresholds);
